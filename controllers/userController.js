@@ -18,15 +18,15 @@ const refreshTokenMaxAge = 240 * 60 * 60 * 1000; // 10 days in milliseconds
 export const accessTokenOptions = {
   maxAge: accessTokenMaxAge,
   httpOnly: true,
-  secure: false, // Must be true in production (for HTTPS)
-  sameSite: "lax", // Use 'lax' for cross-site requests
+  secure: true, // Must be true in production (for HTTPS)
+  sameSite: "none", // Use 'lax' for cross-site requests
   path: "/",
 };
 
 export const refreshTokenOptions = {
   maxAge: refreshTokenMaxAge,
   httpOnly: true,
-  secure: false, // Must be true in production (for HTTPS)
+  secure: true, // Must be true in production (for HTTPS)
   sameSite: "lax", // Use 'lax' for cross-site requests
   path: "/",
 };
@@ -367,7 +367,7 @@ export async function handleForgotPassword(req, res) {
         const text = `
           <p>Dear ${user.username},</p>
           <p>We received a request to reset your password for your account associated with this email address. If you made this request, please click on the link below to reset your password:</p>
-          <p><a href="http://localhost:5173/user/reset-password/${user._id}" target="_blank">Reset your password</a></p>
+          <p><a href="https://dawn-2-dusk-blogs-frontend.vercel.app/user/reset-password/${user._id}" target="_blank">Reset your password</a></p>
           <p>If you did not request a password reset, please ignore this email. Your account security is important to us, and we recommend that you do not share your account details with anyone.</p>
           <p>Thank you for choosing Dawn 2 Dusk Blogs.</p>
           <p>Best regards,<br/>The Dawn 2 Dusk Blogs Team</p>
