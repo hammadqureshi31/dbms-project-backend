@@ -15,6 +15,8 @@ import {
   generateAccessAndRefreshToken,
   refreshTokenOptions,
 } from "./controllers/userController.js";
+import helmet from 'helmet';
+
 
 const app = express();
 dotenv.config({
@@ -22,6 +24,8 @@ dotenv.config({
 });
 
 const { Strategy: GoogleStrategy } = pkg;
+
+app.use(helmet());
 
 const allowedorigins = ["https://dawn-2-dusk-blogs-frontend.vercel.app", "https://dawn-2-dusk-blogs-backend.vercel.app"];
 
@@ -43,15 +47,23 @@ app.use(
   })
 );
 
+
 app.use(express.json());
 app.use(urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use("/uploads", express.static("public/uploads"));
 
+
+app.get("/", (req, res) => {
+  res.send("Dawn 2 Dusk - Blog - Website");
+});
+
+
 app.use("/user", userRoutes);
 app.use("/api/post", postRoutes);
 app.use("/api/comment", commentRoutes);
 
+app.set('trust proxy', 1);
 app.use(
   session({
     secret: "dawn2dusk-blog-web-backend-session",
@@ -144,9 +156,7 @@ app.get(
   }
 );
 
-app.get("/", (req, res) => {
-  res.send("Dawn 2 Dusk - Blog - Website");
-});
+
 
 mongoose
   .connect(process.env.MONGODB_STRING)
