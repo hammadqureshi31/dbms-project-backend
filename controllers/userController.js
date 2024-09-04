@@ -52,7 +52,7 @@ export async function handleSignupNewUser(req, res) {
   const { username, email, password, role, profilePicture } = req.body;
 
   if (
-    [username, email, password, profilePicture].some(
+    [username, email, password].some(
       (field) => !field || field.trim() === ""
     )
   ) {
