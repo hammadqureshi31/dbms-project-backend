@@ -1,12 +1,12 @@
-import fs from "fs";
-import path from "path";
+// import fs from "fs";
+// import path from "path";
 import { User } from "../models/userModel.js";
 import jwt from "jsonwebtoken";
 import { google } from "googleapis";
 import nodemailer from "nodemailer";
-import bcrypt from 'bcrypt';
+import bcrypt from "bcrypt";
 
-const uploadDir = path.resolve("./public/uploads/");
+// const uploadDir = path.resolve("./public/uploads/");
 
 export async function handleTestUser(req, res) {
   await res.send("Welcome to Dawn 2 Dusk Blog Website..");
@@ -18,15 +18,15 @@ const refreshTokenMaxAge = 240 * 60 * 60 * 1000; // 10 days in milliseconds
 export const accessTokenOptions = {
   maxAge: accessTokenMaxAge,
   httpOnly: true,
-  secure: true, // Must be true in production (for HTTPS)
-  sameSite: "none", // Use 'lax' for cross-site requests
+  secure: false, // Must be true in production (for HTTPS)
+  sameSite: "lax", // Use 'lax' for cross-site requests
   path: "/",
 };
 
 export const refreshTokenOptions = {
   maxAge: refreshTokenMaxAge,
   httpOnly: true,
-  secure: true, // Must be true in production (for HTTPS)
+  secure: false, // Must be true in production (for HTTPS)
   sameSite: "lax", // Use 'lax' for cross-site requests
   path: "/",
 };
@@ -49,10 +49,12 @@ export async function generateAccessAndRefreshToken(id) {
 }
 
 export async function handleSignupNewUser(req, res) {
-  const { username, email, password, role } = req.body;
+  const { username, email, password, role, profilePicture } = req.body;
 
   if (
-    [username, email, password].some((field) => !field || field.trim() === "")
+    [username, email, password, profilePicture].some(
+      (field) => !field || field.trim() === ""
+    )
   ) {
     return res.status(400).send("All fields are required.");
   }
@@ -66,8 +68,6 @@ export async function handleSignupNewUser(req, res) {
         .status(409)
         .send("User with this email or username already exists.");
     }
-    const profilePicture = req.file ? `/uploads/${req.file.filename}` : null;
-
     console.log("profile picture", profilePicture);
 
     const newUser = await User.create({
@@ -182,7 +182,7 @@ export async function handleCheckIsUserLoggedIn(req, res) {
 }
 
 export async function handleUpdateUser(req, res) {
-  const { email, username, password } = req.body;
+  const { email, username, password, profilePicture } = req.body;
   const { id } = req.params;
 
   if (
@@ -191,8 +191,6 @@ export async function handleUpdateUser(req, res) {
     return res.status(400).send("All fields are required.");
   }
 
-  const profilePicture = req.file ? `/uploads/${req.file.filename}` : null;
-
   try {
     const toUpdate = await User.findById(id);
 
@@ -200,17 +198,17 @@ export async function handleUpdateUser(req, res) {
       return res.status(404).send("No user Found..");
     }
 
-    const previousPicturePath = path.join(
-      uploadDir,
-      path.basename.toString(toUpdate.profilePicture)
-    );
+    // const previousPicturePath = path.join(
+    //   uploadDir,
+    //   path.basename.toString(toUpdate.profilePicture)
+    // );
 
-    if (toUpdate.profilePicture && fs.existsSync(previousPicturePath)) {
-      fs.unlinkSync(previousPicturePath);
-      console.log(`Profile picture deleted: ${previousPicturePath}`);
-    } else {
-      console.log("Profile picture does not exist or invalid path.");
-    }
+    // if (toUpdate.profilePicture && fs.existsSync(previousPicturePath)) {
+    //   fs.unlinkSync(previousPicturePath);
+    //   console.log(`Profile picture deleted: ${previousPicturePath}`);
+    // } else {
+    //   console.log("Profile picture does not exist or invalid path.");
+    // }
 
     const updateData = {
       username,
@@ -367,7 +365,7 @@ export async function handleForgotPassword(req, res) {
         const text = `
           <p>Dear ${user.username},</p>
           <p>We received a request to reset your password for your account associated with this email address. If you made this request, please click on the link below to reset your password:</p>
-          <p><a href="https://dawn-2-dusk-blogs-frontend.vercel.app/user/reset-password/${user._id}" target="_blank">Reset your password</a></p>
+          <p><a href="http://localhost:5173/user/reset-password/${user._id}" target="_blank">Reset your password</a></p>
           <p>If you did not request a password reset, please ignore this email. Your account security is important to us, and we recommend that you do not share your account details with anyone.</p>
           <p>Thank you for choosing Dawn 2 Dusk Blogs.</p>
           <p>Best regards,<br/>The Dawn 2 Dusk Blogs Team</p>
@@ -406,7 +404,7 @@ export async function handleResetPassword(req, res) {
   }
 
   try {
-    const hashedPass = await bcrypt.hash(password, 10)
+    const hashedPass = await bcrypt.hash(password, 10);
     const resetPass = await User.findByIdAndUpdate(
       userId,
       { password: hashedPass },
@@ -421,5 +419,103 @@ export async function handleResetPassword(req, res) {
   } catch (error) {
     console.error("Error in resetting password:", error);
     res.status(500).send("Internal Server Error");
+  }
+}
+
+export async function handleContactAdmin(req, res) {
+  const { name, email, subject, message } = req.body;
+
+  if (
+    [name, email, subject, message].some((field) => !field || field.trim() === "")
+  ) {
+    return res.status(404).send("All fields required..");
+  }
+
+  if (req.valideUser) {
+    try {
+      const admin = await User.findOne({ isAdmin: true });
+      if (!admin) {
+        return res.status(404).send("No admin found");
+      }
+
+      const sendContactAdminEmail = async ({
+        name,
+        email,
+        subject,
+        message,
+        admin,
+      }) => {
+        const CLIENT_ID = process.env.CLIENT_ID_FOR_MAIL;
+        const CLIENT_SECRET = process.env.CLIENT_SECRET_FOR_MAIL;
+        const REFRESH_TOKEN = process.env.REFRESH_TOKEN_FOR_MAIL;
+        const REDIRECT_URI = "https://developers.google.com/oauthplayground";
+        const MY_EMAIL = "muhammadhammadq882@gmail.com";
+        const tosend = admin.email;
+
+        const oAuth2Client = new google.auth.OAuth2(
+          CLIENT_ID,
+          CLIENT_SECRET,
+          REDIRECT_URI
+        );
+        oAuth2Client.setCredentials({ refresh_token: REFRESH_TOKEN });
+
+        try {
+          const ACCESS_TOKEN = await oAuth2Client.getAccessToken();
+
+          if (!ACCESS_TOKEN.token) {
+            throw new Error("Failed to retrieve access token");
+          }
+
+          const transport = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+              type: "OAuth2",
+              user: MY_EMAIL,
+              clientId: CLIENT_ID,
+              clientSecret: CLIENT_SECRET,
+              refreshToken: REFRESH_TOKEN,
+              accessToken: ACCESS_TOKEN.token,
+            },
+            tls: {
+              rejectUnauthorized: true,
+            },
+          });
+
+          const from = MY_EMAIL;
+          const subject = `New Contact Form Submission: ${subject}`;
+          const text = `
+            <p>Dear ${admin.username},</p>
+            <p>You have received a new message through the contact form on your website.</p>
+            <p><strong>Details:</strong></p>
+            <ul>
+              <li><strong>Name:</strong> ${name}</li>
+              <li><strong>Email:</strong> ${email}</li>
+              <li><strong>Subject:</strong> ${subject}</li>
+              <li><strong>Message:</strong> ${message}</li>
+            </ul>
+            <p>Please review the message at your earliest convenience.</p>
+            <p>Best regards,<br/>Your Website Team</p>
+          `;
+
+          return new Promise((resolve, reject) => {
+            transport.sendMail(
+              { from, to: tosend, subject, html: text },
+              (err, info) => {
+                if (err) reject(err);
+                else resolve(info);
+              }
+            );
+          });
+        } catch (error) {
+          throw new Error(`Error while sending email: ${error.message}`);
+        }
+      };
+
+      await sendContactAdminEmail({ name, email, subject, message, admin });
+      res.status(200).send("Message sent to admin successfully.");
+    } catch (error) {
+      console.error("Error in contacting Admin", error);
+      res.status(500).send("Internal Server Error");
+    }
   }
 }

@@ -16,8 +16,9 @@ export async function handleGetAllPosts(req, res) {
   }
 }
 
+
 export async function handleCreateNewPosts(req, res) {
-  const { title, category, content } = req.body;
+  const { title, category, content, postImage } = req.body;
 
   if (!req.valideUser.isAdmin) {
     return res.status(401).send("You are not allowed to create post");
@@ -27,11 +28,9 @@ export async function handleCreateNewPosts(req, res) {
     return res.status(404).send("Please provide all required fields..");
   }
 
-  console.log(req.valideUser);
-
   if (req.valideUser.isAdmin) {
     try {
-      const postImage = req.file && `/uploads/${req.file.filename}`;
+      // const postImage = req.file && `/uploads/${req.file.filename}`;
       const slug = title
         .split(" ")
         .join("-")
@@ -57,9 +56,10 @@ export async function handleCreateNewPosts(req, res) {
   }
 }
 
+
 export async function handleUpdatePost(req, res) {
   console.log(req.params.postId);
-  const { title, category, content } = req.body;
+  const { title, category, content, postImage } = req.body;
 
   if (!req.valideUser.isAdmin) {
     return res.status(401).send("You are not allowed to update this post");
@@ -82,30 +82,30 @@ export async function handleUpdatePost(req, res) {
       .toLowerCase()
       .replace(/[^a-zA-Z0-9-]/g, "");
 
-    const postPicture = req.file
-      ? `/uploads/${req.file.filename}`
-      : postDetails.postImage;
+    // const postPicture = req.file
+    //   ? `/uploads/${req.file.filename}`
+    //   : postDetails.postImage;
 
-    if (req.file && req.file.filename) {
-      const previousImagePath = path.join(
-        uploadDir,
-        path.basename(postDetails.postImage)
-      );
+    // if (req.file && req.file.filename) {
+    //   const previousImagePath = path.join(
+    //     uploadDir,
+    //     path.basename(postDetails.postImage)
+    //   );
 
-      try {
-        if (postDetails.postImage && fs.existsSync(previousImagePath)) {
-          fs.unlinkSync(previousImagePath);
-        }
-      } catch (err) {
-        console.error("Error deleting the previous image:", err);
-        return res.status(500).send("Error updating the post");
-      }
-    }
+      // try {
+      //   if (postDetails.postImage && fs.existsSync(previousImagePath)) {
+      //     fs.unlinkSync(previousImagePath);
+      //   }
+      // } catch (err) {
+      //   console.error("Error deleting the previous image:", err);
+      //   return res.status(500).send("Error updating the post");
+      // }
+    // }
 
     postDetails.title = title;
     postDetails.category = category;
     postDetails.content = content;
-    postDetails.postImage = postPicture;
+    postDetails.postImage = postImage;
     postDetails.slug = slug;
     postDetails.createdByUser = req.valideUser._id;
 
@@ -119,6 +119,7 @@ export async function handleUpdatePost(req, res) {
     return res.status(500).send("Error in updating the post");
   }
 }
+
 
 export async function handleDeletePost(req, res) {
   if (!req.valideUser.isAdmin) {
@@ -138,11 +139,11 @@ export async function handleDeletePost(req, res) {
       return res.status(404).send("Post not found.");
     }
 
-    const postImageToDelete = path.join(uploadDir, path.basename(postDetails.postImage));
+    // const postImageToDelete = path.join(uploadDir, path.basename(postDetails.postImage));
     
-    if (postDetails.postImage && fs.existsSync(postImageToDelete)) {
-      fs.unlinkSync(postImageToDelete);
-    }
+    // if (postDetails.postImage && fs.existsSync(postImageToDelete)) {
+    //   fs.unlinkSync(postImageToDelete);
+    // }
 
     const deletedComments = await Comment.deleteMany({ postId: postDetails._id });
     console.log("Deleted comments count:", deletedComments.deletedCount);

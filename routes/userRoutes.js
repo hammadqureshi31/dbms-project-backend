@@ -10,9 +10,10 @@ import {
   handleGetAllUsersDetails,
   handleDeleteUserAccountFromDashboard,
   handleForgotPassword,
-  handleResetPassword
+  handleResetPassword,
+  handleContactAdmin
 } from "../controllers/userController.js";
-import { upload } from "../middlewear/multer.middlewear.js";
+// import { upload } from "../middlewear/multer.middlewear.js";
 import { verifyUser } from "../middlewear/verifyUser.js";
 
 
@@ -21,7 +22,7 @@ const router = express.Router();
 
 router.get("/test", handleTestUser);
 
-router.post("/signup", upload.single("profilePicture"), handleSignupNewUser);
+router.post("/signup", handleSignupNewUser);
 
 router.post("/login", handleLoginUser);
 
@@ -29,7 +30,7 @@ router.post("/signout", verifyUser, handleSignOutUser);
 
 router.get("/me", handleCheckIsUserLoggedIn);
 
-router.post("/update/:id", upload.single("profilePicture"), handleUpdateUser);
+router.post("/update/:id", handleUpdateUser);
 
 router.delete("/delete/:id", verifyUser, handleDeleteAccount);
 
@@ -41,5 +42,10 @@ router.post('/forgot-password', handleForgotPassword);
 
 router.post('/reset-password/:userId', handleResetPassword);
 
+router.post('/contact', verifyUser, handleContactAdmin)
+
+// router.post("/signup", upload.single("profilePicture"), handleSignupNewUser);
+
+// router.post("/update/:id", upload.single("profilePicture"), handleUpdateUser);
 
 export default router;

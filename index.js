@@ -27,7 +27,7 @@ const { Strategy: GoogleStrategy } = pkg;
 
 app.use(helmet());
 
-const allowedorigins = ["https://dawn-2-dusk-blogs-frontend.vercel.app", "https://dawn-2-dusk-blogs-backend.vercel.app"];
+const allowedorigins = ["http://localhost:5173", "https://dawn-2-dusk-blogs-backend.vercel.app"];
 
 app.use(
   cors({
@@ -51,7 +51,7 @@ app.use(
 app.use(express.json());
 app.use(urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use("/uploads", express.static("public/uploads"));
+// app.use("/uploads", express.static("public/uploads"));
 
 
 app.get("/", (req, res) => {
@@ -70,8 +70,8 @@ app.use(
     resave: false,
     saveUninitialized: true,
     cookie: {
-      secure: true, 
-      sameSite: "none", 
+      secure: false, 
+      sameSite: "lax", 
       httpOnly: true, // Helps prevent cross-site scripting attacks
     },
     proxy: true, // Required for cookies to work behind proxies like Vercel
@@ -135,7 +135,7 @@ app.get(
 app.get(
   "/auth/google/callback",
   passport.authenticate("google", {
-    failureRedirect: "https://dawn-2-dusk-blogs-frontend.vercel.app/user/login",
+    failureRedirect: "http://localhost:5173/user/login",
   }),
   async (req, res, next) => {
     try {
@@ -148,7 +148,7 @@ app.get(
       res.cookie("refreshToken", refreshToken, refreshTokenOptions);
       res.cookie("accessToken", accessToken, accessTokenOptions);
 
-      res.redirect("https://dawn-2-dusk-blogs-frontend.vercel.app");
+      res.redirect("http://localhost:5173");
     } catch (error) {
       console.error("Error generating tokens:", error);
       res.status(500).send("Failed to generate tokens.");
