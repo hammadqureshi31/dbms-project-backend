@@ -27,7 +27,7 @@ const { Strategy: GoogleStrategy } = pkg;
 
 app.use(helmet());
 
-const allowedorigins = ["http://localhost:5173", "https://dawn-2-dusk-blogs-backend.vercel.app"];
+const allowedorigins = ["https://dawn-2-dusk-blogs-frontend.vercel.app", "https://dawn-2-dusk-blogs-backend.vercel.app"];
 
 app.use(
   cors({
@@ -70,8 +70,8 @@ app.use(
     resave: false,
     saveUninitialized: true,
     cookie: {
-      secure: false, 
-      sameSite: "lax", 
+      secure: true, 
+      sameSite: "none", 
       httpOnly: true, // Helps prevent cross-site scripting attacks
     },
     proxy: true, // Required for cookies to work behind proxies like Vercel
@@ -135,7 +135,7 @@ app.get(
 app.get(
   "/auth/google/callback",
   passport.authenticate("google", {
-    failureRedirect: "http://localhost:5173/user/login",
+    failureRedirect: "https://dawn-2-dusk-blogs-frontend.vercel.app/user/login",
   }),
   async (req, res, next) => {
     try {
@@ -148,7 +148,7 @@ app.get(
       res.cookie("refreshToken", refreshToken, refreshTokenOptions);
       res.cookie("accessToken", accessToken, accessTokenOptions);
 
-      res.redirect("http://localhost:5173");
+      res.redirect("https://dawn-2-dusk-blogs-frontend.vercel.app");
     } catch (error) {
       console.error("Error generating tokens:", error);
       res.status(500).send("Failed to generate tokens.");
