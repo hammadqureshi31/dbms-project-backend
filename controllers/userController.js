@@ -237,7 +237,7 @@ export async function handleUpdateUser(req, res) {
     return res.status(500).send("Internal Server Error.");
   }
 }
-
+ 
 export async function handleDeleteAccount(req, res) {
   const { id } = req.params;
   if (!id) return res.status(400).send("User ID is required.");
@@ -365,7 +365,7 @@ export async function handleForgotPassword(req, res) {
         const text = `
           <p>Dear ${user.username},</p>
           <p>We received a request to reset your password for your account associated with this email address. If you made this request, please click on the link below to reset your password:</p>
-          <p><a href="https://dawn-2-dusk-blogs-frontend.vercel.app/user/reset-password/${user._id}" target="_blank">Reset your password</a></p>
+          <p><a href="http://localhost:5173/user/reset-password/${user._id}" target="_blank">Reset your password</a></p>
           <p>If you did not request a password reset, please ignore this email. Your account security is important to us, and we recommend that you do not share your account details with anyone.</p>
           <p>Thank you for choosing Dawn 2 Dusk Blogs.</p>
           <p>Best regards,<br/>The Dawn 2 Dusk Blogs Team</p>
@@ -423,10 +423,10 @@ export async function handleResetPassword(req, res) {
 }
 
 export async function handleContactAdmin(req, res) {
-  const { name, email, subject, message } = req.body;
+  const { username, emailmsg, msgSubject, message } = req.body;
 
   if (
-    [name, email, subject, message].some((field) => !field || field.trim() === "")
+    [username, emailmsg, msgSubject, message].some((field) => !field || field.trim() === "")
   ) {
     return res.status(404).send("All fields required..");
   }
@@ -434,14 +434,15 @@ export async function handleContactAdmin(req, res) {
   if (req.valideUser) {
     try {
       const admin = await User.findOne({ isAdmin: true });
+      console.log("admin",admin)
       if (!admin) {
         return res.status(404).send("No admin found");
       }
 
       const sendContactAdminEmail = async ({
-        name,
-        email,
-        subject,
+        username,
+        emailmsg,
+        msgSubject,
         message,
         admin,
       }) => {
@@ -482,14 +483,14 @@ export async function handleContactAdmin(req, res) {
           });
 
           const from = MY_EMAIL;
-          const subject = `New Contact Form Submission: ${subject}`;
+          const subject = `New Contact Form Submission: ${msgSubject}`;
           const text = `
             <p>Dear ${admin.username},</p>
             <p>You have received a new message through the contact form on your website.</p>
             <p><strong>Details:</strong></p>
             <ul>
-              <li><strong>Name:</strong> ${name}</li>
-              <li><strong>Email:</strong> ${email}</li>
+              <li><strong>Name:</strong> ${username}</li>
+              <li><strong>Email:</strong> ${emailmsg}</li>
               <li><strong>Subject:</strong> ${subject}</li>
               <li><strong>Message:</strong> ${message}</li>
             </ul>
@@ -502,7 +503,10 @@ export async function handleContactAdmin(req, res) {
               { from, to: tosend, subject, html: text },
               (err, info) => {
                 if (err) reject(err);
-                else resolve(info);
+                else {
+                  resolve(info);
+                  console.log("info ",info);
+                }
               }
             );
           });
@@ -511,7 +515,7 @@ export async function handleContactAdmin(req, res) {
         }
       };
 
-      await sendContactAdminEmail({ name, email, subject, message, admin });
+      await sendContactAdminEmail({ username, emailmsg, msgSubject, message, admin });
       res.status(200).send("Message sent to admin successfully.");
     } catch (error) {
       console.error("Error in contacting Admin", error);
