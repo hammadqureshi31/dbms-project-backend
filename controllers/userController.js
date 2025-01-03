@@ -314,6 +314,7 @@ export async function handleForgotPassword(req, res) {
   if (!email) {
     return res.status(403).send("Email is required.");
   }
+  console.log("Received forgot password request for email:", email);
 
   try {
     const user = await User.findOne({ email });
@@ -321,6 +322,7 @@ export async function handleForgotPassword(req, res) {
     if (!user) {
       return res.status(404).send("No user found with this email.");
     }
+    console.log("User found:", user);
 
     const CLIENT_ID = process.env.CLIENT_ID_FOR_MAIL;
     const CLIENT_SECRET = process.env.CLIENT_SECRET_FOR_MAIL;
@@ -344,6 +346,8 @@ export async function handleForgotPassword(req, res) {
         if (!ACCESS_TOKEN.token) {
           throw new Error("Failed to retrieve access token");
         }
+
+        console.log("Access token retrieved successfully.");
 
         const transport = nodemailer.createTransport({
           service: "gmail",
@@ -372,6 +376,7 @@ export async function handleForgotPassword(req, res) {
         `;
 
         return new Promise((resolve, reject) => {
+          console.log("Sending email...");
           transport.sendMail(
             { from, to: tosend, subject, html: text },
             (err, info) => {
@@ -386,6 +391,7 @@ export async function handleForgotPassword(req, res) {
     };
 
     await sendTestEmail();
+    console.log("Password reset email sent successfully...");
     res.status(200).send("Password reset email sent successfully.");
   } catch (error) {
     console.error("Error in sending forgot password email:", error);
