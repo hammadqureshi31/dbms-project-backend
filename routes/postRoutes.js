@@ -1,13 +1,15 @@
 import express from 'express'
-import { handleCreateNewPosts, handleDeletePost, handleGetAllPosts, handleUpdatePost } from '../controllers/postController.js'
+import { handleCreateNewPosts, handleDeletePost, handleGetAllPosts, handleUpdatePost, handleGetPostById } from '../controllers/postController.js'
 import { verifyUser } from '../middlewear/verifyUser.js';
 // import { upload } from '../middlewear/multer.middlewear.js';
 
 const router = express.Router()
 
-router.get('/', handleGetAllPosts)
+router.get('/pages', handleGetAllPosts)
 
 router.post('/create', verifyUser,  handleCreateNewPosts)
+
+router .get('/:id', handleGetPostById)
 
 router.put('/update/:postId', verifyUser, handleUpdatePost)
 

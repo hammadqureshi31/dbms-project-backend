@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import { google } from "googleapis";
 import nodemailer from "nodemailer";
 import bcrypt from "bcrypt";
+import { Log } from "../models/activityLogModel.js";
 
 // const uploadDir = path.resolve("./public/uploads/");
 
@@ -122,6 +123,16 @@ export async function handleLoginUser(req, res) {
     const loggedInUser = await User.findById(userExisted._id).select(
       "-password -refreshToken"
     );
+
+    try {
+      await Log.create({
+        details: `${userExisted.username} logged in`,
+        user: userExisted._id, 
+      });
+    } catch (logError) {
+      console.error("Failed to create activity log:", logError.message);
+    }
+
     res.cookie("accessToken", accessToken, accessTokenOptions);
     res.cookie("refreshToken", refreshToken, refreshTokenOptions);
     res.status(200).send(loggedInUser);
@@ -369,7 +380,7 @@ export async function handleForgotPassword(req, res) {
         const text = `
           <p>Dear ${user.username},</p>
           <p>We received a request to reset your password for your account associated with this email address. If you made this request, please click on the link below to reset your password:</p>
-          <p><a href="https://dawn-2-dusk-blogs-frontend.vercel.app/user/reset-password/${user._id}" target="_blank">Reset your password</a></p>
+          <p><a href="https://dbms-project-frontend-wine.vercel.app/user/reset-password/${user._id}" target="_blank">Reset your password</a></p>
           <p>If you did not request a password reset, please ignore this email. Your account security is important to us, and we recommend that you do not share your account details with anyone.</p>
           <p>Thank you for choosing Dawn 2 Dusk Blogs.</p>
           <p>Best regards,<br/>The Dawn 2 Dusk Blogs Team</p>

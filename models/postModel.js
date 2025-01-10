@@ -18,6 +18,10 @@ const postSchema = mongoose.Schema({
         type: String,
         default: "uncategorized"
     },
+    clicks:{
+        type: Number,
+        default: 0
+    },
     slug: {
         type: String,
         required: true,

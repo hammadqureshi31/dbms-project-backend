@@ -1,17 +1,18 @@
+import { Log } from "../models/activityLogModel.js";
 import { Comment } from "../models/commentModel.js";
 import { User } from "../models/userModel.js";
 
-export async function handleGetAllPostsComments(req,res) {
+export async function handleGetAllPostsComments(req, res) {
   try {
     const allPostscomments = await Comment.find();
 
-    if(!allPostscomments || allPostscomments.length === 0){
-      return res.status(404).send("No post comments found!")
+    if (!allPostscomments || allPostscomments.length === 0) {
+      return res.status(404).send("No post comments found!");
     }
 
     res.status(200).json({
-      comments: allPostscomments
-    })
+      comments: allPostscomments,
+    });
   } catch (error) {
     console.error(error);
     return res
@@ -19,7 +20,6 @@ export async function handleGetAllPostsComments(req,res) {
       .json({ error: "Something went wrong while fetching comments." });
   }
 }
-
 
 export async function handleGetPostComments(req, res) {
   const { postId } = req.params;
@@ -64,7 +64,6 @@ export async function handleGetPostComments(req, res) {
   }
 }
 
-
 export async function handleWriteNewComment(req, res) {
   const { postId, userId } = req.params;
   const { content } = req.body;
@@ -81,6 +80,15 @@ export async function handleWriteNewComment(req, res) {
         userId,
       });
 
+      try {
+        await Log.create({
+          details: `${req.valideUser.username} dropped a new comment`,
+          user: req.valideUser._id,
+        });
+      } catch (logError) {
+        console.error("Failed to create activity log:", logError.message);
+      }
+
       return res
         .status(200)
         .json({ message: "Comment posted successfully.", comment: newComment });
@@ -96,7 +104,6 @@ export async function handleWriteNewComment(req, res) {
       .json({ error: "You are not authorized to post this comment." });
   }
 }
-
 
 export async function handleLikeComment(req, res) {
   const { commentId } = req.params;
@@ -143,61 +150,59 @@ export async function handleLikeComment(req, res) {
   }
 }
 
-
 export async function handleDislikeComment(req, res) {
-    const { commentId } = req.params;
-    const { userId } = req.body;
-    console.log(commentId, userId, req.valideUser)
+  const { commentId } = req.params;
+  const { userId } = req.body;
+  console.log(commentId, userId, req.valideUser);
 
-    if (req.valideUser && req.valideUser._id.toString() === userId.toString()) {
-      try {
-        const comment = await Comment.findById(commentId);
-  
-        if (!comment) {
-          return res.status(404).send("Comment not found.");
-        }
-  
-        const alreadyDisliked = comment.dislikes.includes(userId);
-  
-        if (alreadyDisliked) {
-          comment.dislikes = comment.dislikes.filter(
-            (id) => id.toString() !== userId.toString()
-          );
-        } else {
-          comment.dislikes.push(userId);
-        }
-  
-        await comment.save();
-  
-        return res.status(200).json({
-          dislikes: comment.dislikes.length,
-        });
-      } catch (error) {
-        console.error("Error disliking the comment:", error);
-        return res.status(500).send("Server error while disliking the comment.");
+  if (req.valideUser && req.valideUser._id.toString() === userId.toString()) {
+    try {
+      const comment = await Comment.findById(commentId);
+
+      if (!comment) {
+        return res.status(404).send("Comment not found.");
       }
-    } else {
-      return res.status(401).send("Unauthorized to dislike this comment.");
-    }
-}
-  
 
-export async function handleDeletePostComment(req,res) {
-  if(req.valideUser && req.valideUser.isAdmin){
+      const alreadyDisliked = comment.dislikes.includes(userId);
+
+      if (alreadyDisliked) {
+        comment.dislikes = comment.dislikes.filter(
+          (id) => id.toString() !== userId.toString()
+        );
+      } else {
+        comment.dislikes.push(userId);
+      }
+
+      await comment.save();
+
+      return res.status(200).json({
+        dislikes: comment.dislikes.length,
+      });
+    } catch (error) {
+      console.error("Error disliking the comment:", error);
+      return res.status(500).send("Server error while disliking the comment.");
+    }
+  } else {
+    return res.status(401).send("Unauthorized to dislike this comment.");
+  }
+}
+
+export async function handleDeletePostComment(req, res) {
+  if (req.valideUser && req.valideUser.isAdmin) {
     const { commentId } = req.params;
 
-    if(!commentId){
+    if (!commentId) {
       return res.status(403).send("Invalid request ....");
     }
 
     const deletedComment = await Comment.findByIdAndDelete(commentId);
 
-    if(!deletedComment){
+    if (!deletedComment) {
       return res.status(404).send("No comment found with this id..");
     }
 
-    return res.status(200).send("Comment deleted")
-  }else{
+    return res.status(200).send("Comment deleted");
+  } else {
     return res.status(401).send("Unauthorized to delete a comment.");
   }
 }

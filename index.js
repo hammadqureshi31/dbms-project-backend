@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import userRoutes from "./routes/userRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
 import commentRoutes from "./routes/commentRoutes.js";
+import logRoutes from "./routes/logRoutes.js";
 import passport from "passport";
 import session from "express-session";
 import pkg from "passport-google-oauth20";
@@ -27,7 +28,7 @@ const { Strategy: GoogleStrategy } = pkg;
 
 app.use(helmet());
 
-const allowedorigins = ["https://dawn-2-dusk-blogs-frontend.vercel.app", "https://dawn-2-dusk-blogs-backend.vercel.app"];
+const allowedorigins = ["https://dbms-project-frontend-wine.vercel.app", "https://dbms-project-backend-beta.vercel.app"];
 
 app.use(
   cors({
@@ -62,6 +63,7 @@ app.get("/", (req, res) => {
 app.use("/user", userRoutes);
 app.use("/api/post", postRoutes);
 app.use("/api/comment", commentRoutes);
+app.use("/api/logs", logRoutes);
 
 app.set('trust proxy', 1);
 app.use(
@@ -70,11 +72,11 @@ app.use(
     resave: false,
     saveUninitialized: true,
     cookie: {
-      secure: true, 
+      secure: false, 
       sameSite: "none", 
-      httpOnly: true, // Helps prevent cross-site scripting attacks
+      httpOnly: false, // Helps prevent cross-site scripting attacks
     },
-    proxy: true, // Required for cookies to work behind proxies like Vercel
+    proxy: false, // Required for cookies to work behind proxies like Vercel
   })
 );
 
@@ -87,7 +89,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "https://dawn-2-dusk-blogs-backend.vercel.app/auth/google/callback",
+      callbackURL: "https://dbms-project-backend-beta.vercel.app/auth/google/callback",
       scope: ["profile", "email"],
     },
     async (accessToken, refreshToken, profile, done) => {
@@ -135,7 +137,7 @@ app.get(
 app.get(
   "/auth/google/callback",
   passport.authenticate("google", {
-    failureRedirect: "https://dawn-2-dusk-blogs-frontend.vercel.app/user/login",
+    failureRedirect: "https://dbms-project-frontend-wine.vercel.app/user/login",
   }),
   async (req, res, next) => {
     try {
@@ -148,7 +150,7 @@ app.get(
       res.cookie("refreshToken", refreshToken, refreshTokenOptions);
       res.cookie("accessToken", accessToken, accessTokenOptions);
 
-      res.redirect("https://dawn-2-dusk-blogs-frontend.vercel.app");
+      res.redirect("https://dbms-project-frontend-wine.vercel.app");
     } catch (error) {
       console.error("Error generating tokens:", error);
       res.status(500).send("Failed to generate tokens.");
