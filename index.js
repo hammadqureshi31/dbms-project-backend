@@ -28,7 +28,7 @@ const { Strategy: GoogleStrategy } = pkg;
 
 app.use(helmet());
 
-const allowedorigins = ["https://dbms-project-frontend-wine.vercel.app", "https://dbms-project-backend-beta.vercel.app"];
+const allowedorigins = ["https://dbms-project-frontend-mu.vercel.app", "https://dbms-project-backend-zeta.vercel.app"];
 
 app.use(
   cors({
@@ -72,11 +72,11 @@ app.use(
     resave: false,
     saveUninitialized: true,
     cookie: {
-      secure: false, 
+      secure: true, 
       sameSite: "none", 
-      httpOnly: false, // Helps prevent cross-site scripting attacks
+      httpOnly: true, // Helps prevent cross-site scripting attacks
     },
-    proxy: false, // Required for cookies to work behind proxies like Vercel
+    proxy: true, // Required for cookies to work behind proxies like Vercel
   })
 );
 
@@ -89,7 +89,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "https://dbms-project-backend-beta.vercel.app/auth/google/callback",
+      callbackURL: "https://dbms-project-backend-zeta.vercel.app/auth/google/callback",
       scope: ["profile", "email"],
     },
     async (accessToken, refreshToken, profile, done) => {
@@ -137,7 +137,7 @@ app.get(
 app.get(
   "/auth/google/callback",
   passport.authenticate("google", {
-    failureRedirect: "https://dbms-project-frontend-wine.vercel.app/user/login",
+    failureRedirect: "https://dbms-project-frontend-mu.vercel.app/user/login",
   }),
   async (req, res, next) => {
     try {
@@ -150,7 +150,7 @@ app.get(
       res.cookie("refreshToken", refreshToken, refreshTokenOptions);
       res.cookie("accessToken", accessToken, accessTokenOptions);
 
-      res.redirect("https://dbms-project-frontend-wine.vercel.app");
+      res.redirect("https://dbms-project-frontend-mu.vercel.app");
     } catch (error) {
       console.error("Error generating tokens:", error);
       res.status(500).send("Failed to generate tokens.");
